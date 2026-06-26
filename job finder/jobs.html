@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Career Lens Jobs</title>
+
+    <style>
+        body {
+            font-family: Inter, Arial;
+            background: #05070a;
+            color: white;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .trending {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .trending span {
+            display: inline-block;
+            background: #161b33;
+            padding: 8px 14px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: .3s;
+        }
+
+        .trending span:hover {
+            background: #6d5dfc;
+        }
+
+        .search-section {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px;
+        }
+
+        input {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: #161b33;
+            color: white;
+            min-width: 220px;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .jobs-count {
+            width: 90%;
+            max-width: 1100px;
+            margin: 0 auto 15px auto;
+            color: #aaa;
+            font-size: 15px;
+        }
+
+        .jobs-container {
+            width: 90%;
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            padding-bottom: 50px;
+        }
+
+        .job-card {
+            background: #161b33;
+            padding: 22px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
+            transition: .3s;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, .7);
+        }
+
+        .job-title {
+            font-size: 19px;
+            color: #a78bfa;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .company {
+            font-weight: bold;
+        }
+
+        .location {
+            color: #ccc;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #6d5dfc33;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .apply-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            grid-column: 1/-1;
+            color: #aaa;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Career Lens Job Finder</h1>
+        <p>Discover live jobs based on your skills and career interests</p>
+    </div>
+
+    <div class="trending">
+        <span onclick="quickSearch('AI Engineer')">AI Engineer</span>
+        <span onclick="quickSearch('Data Scientist')">Data Scientist</span>
+        <span onclick="quickSearch('Cyber Security Analyst')">Cyber Security</span>
+        <span onclick="quickSearch('Cloud Engineer')">Cloud Engineer</span>
+        <span onclick="quickSearch('Web Developer')">Web Developer</span>
+    </div>
+
+    <div class="search-section">
+
+        <input id="role" list="career-list" placeholder="Career">
+
+        <datalist id="career-list">
+            <option value="Data Scientist">
+            <option value="AI Engineer">
+            <option value="Machine Learning Engineer">
+            <option value="Software Developer">
+            <option value="Cyber Security Analyst">
+            <option value="Cloud Engineer">
+            <option value="Web Developer">
+            <option value="Data Analyst">
+        </datalist>
+
+        <input id="location" list="country-list" placeholder="Country">
+
+        <datalist id="country-list">
+            <option value="India">
+            <option value="USA">
+            <option value="Canada">
+            <option value="UK">
+            <option value="Singapore">
+        </datalist>
+
+        <button onclick="searchJobs()">Search Jobs</button>
+
+    </div>
+
+    <div id="jobsCount" class="jobs-count"></div>
+    <div id="jobs" class="jobs-container"></div>
+
+    <script>
+
+        let currentPage = 1
+        let currentRole = ""
+        let currentLocation = ""
+
+        document.getElementById("role").addEventListener("keypress", e => {
+            if (e.key === "Enter") searchJobs()
+        })
+
+        document.getElementById("location").addEventListener("keypress", e => {
+            if (e.key === "Enter") searchJobs()
+        })
+
+        function quickSearch(role) {
+            document.getElementById("role").value = role
+            searchJobs(role, "")
+        }
+
+        window.onload = () => {
+
+            const container = document.getElementById("jobs")
+
+            container.innerHTML = `
+<div style="grid-column:1/-1;text-align:center;color:#aaa;font-size:18px;margin-top:60px">
+Explore jobs here 🔍
+</div>
+`
+
+        }
+
+        async function searchJobs(roleInput, locationInput) {
+
+            currentRole = roleInput || document.getElementById("role").value
+            currentLocation = locationInput || document.getElementById("location").value
+            currentPage = 1
+
+            const container = document.getElementById("jobs")
+            const count = document.getElementById("jobsCount")
+
+            container.innerHTML = "<p class='loading'>Loading jobs...</p>"
+            count.innerHTML = ""
+
+            try {
+
+                const res = await fetch(`/jobs?role=${encodeURIComponent(currentRole)}&location=${encodeURIComponent(currentLocation)}&page=${currentPage}`)
+                const data = await res.json()
+
+                const jobs = data.jobs || []
+
+                container.innerHTML = ""
+                count.textContent = `${jobs.length} jobs found`
+
+                displayJobs(jobs)
+                addExploreButton()
+
+            }
+            catch {
+                container.innerHTML = "<p class='loading'>Error loading jobs</p>"
+            }
+
+        }
+
+        function displayJobs(jobs) {
+
+            const container = document.getElementById("jobs")
+
+            jobs.forEach(job => {
+
+                const title = job.job_title || "Job Title"
+                const company = job.employer_name || "Company"
+                const city = job.job_city || ""
+                const country = job.job_country || ""
+                const apply = job.job_apply_link || "#"
+                const type = (job.job_employment_type || "FULL_TIME").replace("_", " ")
+
+                container.innerHTML += `
+
+<div class="job-card">
+
+<div class="job-title">${title}</div>
+
+<div class="company">${company}</div>
+
+<div class="location">📍 ${city} ${country}</div>
+
+<div class="tag">${type}</div>
+
+<a class="apply-btn" href="${apply}" target="_blank">
+Apply Now
+</a>
+
+</div>
+
+`
+
+            })
+
+        }
+
+        function addExploreButton() {
+
+            let btn = document.getElementById("exploreBtn")
+
+            if (!btn) {
+
+                const container = document.getElementById("jobs")
+
+                const wrapper = document.createElement("div")
+
+                wrapper.style.gridColumn = "1/-1"
+                wrapper.style.textAlign = "center"
+                wrapper.style.marginTop = "20px"
+
+                wrapper.innerHTML = `
+<button id="exploreBtn" onclick="loadMoreJobs()">
+Explore More Jobs
+</button>
+`
+
+                container.appendChild(wrapper)
+
+            }
+
+        }
+
+        async function loadMoreJobs() {
+
+            const btn = document.getElementById("exploreBtn")
+
+            btn.innerText = "Loading jobs..."
+            btn.disabled = true
+
+            currentPage++
+
+            try {
+
+                const res = await fetch(`/jobs?role=${encodeURIComponent(currentRole)}&location=${encodeURIComponent(currentLocation)}&page=${currentPage}`)
+                const data = await res.json()
+
+                const jobs = data.jobs || []
+
+                if (jobs.length === 0) {
+
+                    btn.innerText = "No More Jobs"
+                    return
+
+                }
+
+                displayJobs(jobs)
+
+                btn.innerText = "Explore More Jobs"
+                btn.disabled = false
+
+            }
+            catch {
+
+                btn.innerText = "Error Loading"
+                btn.disabled = false
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
