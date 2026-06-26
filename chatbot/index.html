@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Career Lens AI Chatbot</title>
+
+    <style>
+        body {
+            font-family: Inter, Arial;
+            background: linear-gradient(135deg, #05070a, #0b1020);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        /* CHAT CONTAINER */
+
+        .chatbox {
+            width: 720px;
+            background: rgba(11, 16, 32, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* TITLE */
+
+        h2 {
+            text-align: center;
+            margin-bottom: 18px;
+            font-size: 28px;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* MESSAGE AREA */
+
+        .messages {
+            height: 450px;
+            overflow-y: auto;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 15px;
+            background: #0f1428;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* USER MESSAGE */
+
+        .user-msg {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #6d5dfc, #8b5cf6);
+            padding: 12px 18px;
+            border-radius: 18px 18px 4px 18px;
+            max-width: 70%;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(109, 93, 252, 0.3);
+        }
+
+        /* BOT MESSAGE */
+
+        .bot-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .bot-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .bot-msg {
+            background: #161b33;
+            padding: 14px 18px;
+            border-radius: 18px 18px 18px 4px;
+            max-width: 75%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+            line-height: 1.6;
+            box-shadow: 0 0 15px rgba(109, 93, 252, 0.1);
+        }
+
+        /* TEXT STYLES */
+
+        .section-title {
+            font-weight: 700;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            color: #a78bfa;
+            font-size: 15px;
+        }
+
+        .paragraph {
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+
+        .bullet {
+            margin-left: 15px;
+            margin-bottom: 6px;
+            color: #cbd5f5;
+        }
+
+        /* INPUT AREA */
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: #161b33;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+        }
+
+        button {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6d5dfc, #ec4899);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* TYPING ANIMATION */
+
+        .typing {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #aaa;
+            border-radius: 50%;
+            animation: blink 1.4s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.2
+            }
+
+            20% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 0.2
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="chatbox">
+
+        <h2>Career Lens AI Chatbot</h2>
+
+        <div class="messages" id="messages"></div>
+
+        <div class="input-area">
+            <input id="input" placeholder="Ask about careers, courses, or colleges...">
+            <button onclick="send()">Send</button>
+        </div>
+
+    </div>
+
+    <script>
+
+        const messages = document.getElementById("messages")
+        const input = document.getElementById("input")
+
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") send()
+        })
+
+        /* FORMAT RESPONSE */
+
+        function formatResponse(text) {
+
+            text = text.replace(/\*\*/g, "")
+
+            const lines = text.split("\n")
+
+            let html = ""
+
+            for (let line of lines) {
+
+                line = line.trim()
+                if (line === "") continue
+
+                if (line.endsWith(":")) {
+                    html += `<div class="section-title">${line}</div>`
+                }
+                else if (line.startsWith("•") || line.startsWith("-")) {
+                    line = line.replace("•", "").replace("-", "")
+                    html += `<div class="bullet">• ${line}</div>`
+                }
+                else {
+                    html += `<div class="paragraph">${line}</div>`
+                }
+
+            }
+
+            return html
+        }
+
+        /* SEND MESSAGE */
+
+        async function send() {
+
+            const message = input.value.trim()
+
+            if (message === "") return
+
+            messages.innerHTML += `
+<div class="user-msg">${message}</div>
+`
+
+            input.value = ""
+
+            messages.scrollTop = messages.scrollHeight
+
+            messages.innerHTML += `
+<div class="bot-container" id="typing">
+<div class="bot-avatar">AI</div>
+<div class="bot-msg typing">
+<span></span><span></span><span></span>
+</div>
+</div>
+`
+
+            messages.scrollTop = messages.scrollHeight
+
+            const res = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            })
+
+            const data = await res.json()
+
+            setTimeout(() => {
+
+                document.getElementById("typing").remove()
+
+                const formatted = formatResponse(data.reply)
+
+                messages.innerHTML += `
+<div class="bot-container">
+<div class="bot-avatar">AI</div>
+<div class="bot-msg">${formatted}</div>
+</div>
+`
+
+                messages.scrollTop = messages.scrollHeight
+
+            }, 1500)
+
+        }
+
+    </script>
+
+</body>
+
+</html>
